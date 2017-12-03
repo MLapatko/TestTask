@@ -5,6 +5,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import com.example.user.testtask.db.DBHelper;
@@ -22,6 +24,9 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private DBHelper dbHelper;
     private SQLiteDatabase db;
+    private RecyclerView recyclerViewFilms;
+    private RecyclerView.LayoutManager layoutManager;
+    private List<Film> films;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<FilmRequestModel> call, Response<FilmRequestModel> response) {
                 Log.e("mylog", response.body().toString());
                 insertFilmsIntoDB(response.body());
+
             }
 
             @Override
@@ -41,9 +47,14 @@ public class MainActivity extends AppCompatActivity {
         });
         dbHelper=new DBHelper(this);
         db=dbHelper.getWritableDatabase();
+        recyclerViewFilms=(RecyclerView) findViewById(R.id.films_recycler_view);
+        layoutManager=new LinearLayoutManager(this);
+        recyclerViewFilms.setLayoutManager(layoutManager);
+
+
     }
     private void insertFilmsIntoDB(FilmRequestModel request) {
-        List<Film> films=request.getList();
+        films=request.getList();
         for (int i = 0; i <films.size(); i++) {
             ContentValues values = new ContentValues();
             values.put(DBScheme.NAME, films.get(i).getName());
@@ -53,10 +64,11 @@ public class MainActivity extends AppCompatActivity {
             values.put(DBScheme.DESCRIPTION, films.get(i).getDescription());
             db.insert(DBScheme.TABLE_FILMS,null,values);
         }
+        recyclerViewFilms.setAdapter(new FilmsAdapter(films,this));
     }
 
     private void showFilmsFromDB() {
-        List<Film> filmsList=new ArrayList<>();
+        films=new ArrayList<>();
         String colums[] = new String[] {
                 DBScheme.ID_FILM,
                 DBScheme.NAME,
@@ -79,12 +91,12 @@ public class MainActivity extends AppCompatActivity {
                 film.setPremiere(cursor.getString(cursor.getColumnIndex(DBScheme.PREMIERE)));
                 film.setDescription(cursor.getString(cursor.getColumnIndex(DBScheme.DESCRIPTION)));
 
-                filmsList.add(film);
+                films.add(film);
                 cursor.moveToNext();
             }
         }
 
         cursor.close();
-        Log.e("mylog","filmsList"+filmsList.toString());
+        Log.e("mylog","filmsList"+films.toString());
     }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- cardView dimens -->
+    <dimen name="card_view_margin">7dp</dimen>
+    <dimen name="card_view_radius">15dp</dimen>
+    <dimen name="image_film_margin">5dp</dimen>
+</resources>
