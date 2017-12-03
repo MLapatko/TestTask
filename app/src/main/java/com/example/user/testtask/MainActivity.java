@@ -1,17 +1,27 @@
 package com.example.user.testtask;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.example.user.testtask.db.DBHelper;
+import com.example.user.testtask.db.DBScheme;
+import com.example.user.testtask.model.Film;
 import com.example.user.testtask.model.FilmRequestModel;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-
+    private DBHelper dbHelper;
+    private SQLiteDatabase db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,12 +30,61 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<FilmRequestModel> call, Response<FilmRequestModel> response) {
                 Log.e("mylog", response.body().toString());
+                insertFilmsIntoDB(response.body());
             }
 
             @Override
             public void onFailure(Call<FilmRequestModel> call, Throwable t) {
                 Log.e("mylog",t.toString());
+                showFilmsFromDB();
             }
         });
+        dbHelper=new DBHelper(this);
+        db=dbHelper.getWritableDatabase();
+    }
+    private void insertFilmsIntoDB(FilmRequestModel request) {
+        List<Film> films=request.getList();
+        for (int i = 0; i <films.size(); i++) {
+            ContentValues values = new ContentValues();
+            values.put(DBScheme.NAME, films.get(i).getName());
+            values.put(DBScheme.NAME_ENG, films.get(i).getName_eng());
+            values.put(DBScheme.IMAGE, films.get(i).getImage());
+            values.put(DBScheme.PREMIERE, films.get(i).getPremiere());
+            values.put(DBScheme.DESCRIPTION, films.get(i).getDescription());
+            db.insert(DBScheme.TABLE_FILMS,null,values);
+        }
+    }
+
+    private void showFilmsFromDB() {
+        List<Film> filmsList=new ArrayList<>();
+        String colums[] = new String[] {
+                DBScheme.ID_FILM,
+                DBScheme.NAME,
+                DBScheme.NAME_ENG,
+                DBScheme.IMAGE,
+                DBScheme.PREMIERE,
+                DBScheme.DESCRIPTION
+        };
+
+        Cursor cursor = db.query(DBScheme.TABLE_FILMS,colums,null,null, null, null, null);
+
+        if (!cursor.isAfterLast()) {
+            cursor.moveToFirst();
+            while(!cursor.isAfterLast()) {
+
+                Film film = new Film();
+                film.setName(cursor.getString(cursor.getColumnIndex(DBScheme.NAME)));
+                film.setName_eng(cursor.getString(cursor.getColumnIndex(DBScheme.NAME_ENG)));
+                film.setImage(cursor.getString(cursor.getColumnIndex(DBScheme.IMAGE)));
+                film.setPremiere(cursor.getString(cursor.getColumnIndex(DBScheme.PREMIERE)));
+                film.setDescription(cursor.getString(cursor.getColumnIndex(DBScheme.DESCRIPTION)));
+
+                filmsList.add(film);
+                cursor.moveToNext();
+            }
+        }
+
+        cursor.close();
+        Log.e("mylog","filmsList"+filmsList.toString());
     }
 }
