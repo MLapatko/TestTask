@@ -1,6 +1,7 @@
 package com.example.user.testtask;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,8 +19,8 @@ import java.util.List;
  */
 
 public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.ViewHolder> {
-    private List<Film> filmsList;
-    private Context context;
+    private static List<Film> filmsList;
+    private static Context context;
 
     public FilmsAdapter(List<Film> filmsList,Context context) {
         this.context=context;
@@ -30,6 +31,7 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.ViewHolder> 
     public FilmsAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.films_item,parent,
                 false);
+
         return new ViewHolder(view);
     }
 
@@ -39,6 +41,7 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.ViewHolder> 
         holder.name_eng.setText(filmsList.get(position).getName_eng());
         Picasso.with(context)
                 .load(filmsList.get(position).getImage())
+                .error(R.drawable.default_picture)
                 .into(holder.imageFilm);
     }
 
@@ -46,7 +49,7 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.ViewHolder> 
     public int getItemCount() {
         return filmsList.size();
     }
-    public static class ViewHolder extends RecyclerView.ViewHolder{
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         TextView name;
         TextView name_eng;
         ImageView imageFilm;
@@ -55,6 +58,14 @@ public class FilmsAdapter extends RecyclerView.Adapter<FilmsAdapter.ViewHolder> 
             name=(TextView) itemView.findViewById(R.id.film_name);
             name_eng=(TextView) itemView.findViewById(R.id.film_name_eng);
             imageFilm=(ImageView)itemView.findViewById(R.id.film_image);
+            itemView.setOnClickListener(this);
         }
+            @Override
+            public void onClick(View view) {
+                Intent intent=new Intent(context,FilmInformation.class);
+                intent.putExtra("films",filmsList.get(this.getLayoutPosition()));
+                context.startActivity(intent);
+            }
+
     }
 }

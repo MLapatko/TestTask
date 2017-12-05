@@ -3,11 +3,11 @@ package com.example.user.testtask;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 
 import com.example.user.testtask.db.DBHelper;
 import com.example.user.testtask.db.DBScheme;
@@ -27,33 +27,51 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerViewFilms;
     private RecyclerView.LayoutManager layoutManager;
     private List<Film> films;
+    final static String POSITION="POSITION";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        App.getFilmsApi().getFilms().enqueue(new Callback<FilmRequestModel>() {
-            @Override
-            public void onResponse(Call<FilmRequestModel> call, Response<FilmRequestModel> response) {
-                Log.e("mylog", response.body().toString());
-                insertFilmsIntoDB(response.body());
-
-            }
-
-            @Override
-            public void onFailure(Call<FilmRequestModel> call, Throwable t) {
-                Log.e("mylog",t.toString());
-                showFilmsFromDB();
-            }
-        });
-        dbHelper=new DBHelper(this);
-        db=dbHelper.getWritableDatabase();
         recyclerViewFilms=(RecyclerView) findViewById(R.id.films_recycler_view);
         layoutManager=new LinearLayoutManager(this);
         recyclerViewFilms.setLayoutManager(layoutManager);
-
-
+        if(!isInternet()){
+            showFilmsFromDB();
+        }
+        else {
+            App.getFilmsApi().getFilms().enqueue(new Callback<FilmRequestModel>() {
+                @Override
+                public void onResponse(Call<FilmRequestModel> call,
+                                       Response<FilmRequestModel> response) {
+                    insertFilmsIntoDB(response.body());
+                }
+                @Override
+                public void onFailure(Call<FilmRequestModel> call, Throwable t) {
+                    showFilmsFromDB();
+                }
+            });
+        }
     }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState!=null)
+            layoutManager.scrollToPosition(savedInstanceState.getInt(POSITION));
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (layoutManager!=null && layoutManager instanceof LinearLayoutManager)
+        outState.putInt(POSITION,((LinearLayoutManager)layoutManager).findFirstVisibleItemPosition());
+        super.onSaveInstanceState(outState);
+    }
+
     private void insertFilmsIntoDB(FilmRequestModel request) {
+
+        dbHelper=new DBHelper(this);
+        db=dbHelper.getWritableDatabase();
+        db.delete(DBScheme.TABLE_FILMS,null,null);
         films=request.getList();
         for (int i = 0; i <films.size(); i++) {
             ContentValues values = new ContentValues();
@@ -78,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
                 DBScheme.DESCRIPTION
         };
 
+        dbHelper=new DBHelper(this);
+        db=dbHelper.getReadableDatabase();
         Cursor cursor = db.query(DBScheme.TABLE_FILMS,colums,null,null, null, null, null);
 
         if (!cursor.isAfterLast()) {
@@ -97,6 +117,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         cursor.close();
-        Log.e("mylog","filmsList"+films.toString());
+        recyclerViewFilms.setAdapter(new FilmsAdapter(films,this));
+    }
+    private boolean isInternet() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(getBaseContext()
+                .CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo() != null;
     }
 }

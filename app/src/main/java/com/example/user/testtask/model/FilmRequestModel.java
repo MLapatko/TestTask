@@ -1,5 +1,7 @@
 package com.example.user.testtask.model;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 /**
@@ -7,6 +9,7 @@ import java.util.List;
  */
 
 public class FilmRequestModel {
+    @SerializedName("list")
     List<Film> list;
 
     public List<Film> getList() {

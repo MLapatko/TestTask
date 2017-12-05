@@ -4,4 +4,17 @@
     <dimen name="card_view_margin">7dp</dimen>
     <dimen name="card_view_radius">15dp</dimen>
     <dimen name="image_film_margin">5dp</dimen>
+    <dimen name="image_height_list">75dp</dimen>
+    <dimen name="image_width_list">55dp</dimen>
+    <dimen name="text_size_name_film_list">18sp</dimen>
+    <dimen name="margin_start">5dp</dimen>
+    <dimen name="films_item_margin">5dp</dimen>
+
+    <!--film_information dimens -->
+    <dimen name="image_height">200dp</dimen>
+    <dimen name="image_width">120dp</dimen>
+    <dimen name="text_size_name_film">20sp</dimen>
+    <dimen name="text_size_premiere">18sp</dimen>
+    <dimen name="film_information_margin">5dp</dimen>
+    <dimen name="image_margin">10dp</dimen>
 </resources>
